@@ -43,10 +43,8 @@ int main(int argc, char** argv)
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htons(INADDR_ANY);
 
-    int ret = bind(client, reinterpret_cast<struct sockaddr*>(&server_address),
-        sizeof(server_address));
-
-    if (ret < 0) {
+    if (bind(client, reinterpret_cast<struct sockaddr*>(&server_address),
+        sizeof(server_address)) < 0) {
         std::cout << ERROR_S << "binding connection. Socket has already been establishing.\n";
         return -1;
     }
