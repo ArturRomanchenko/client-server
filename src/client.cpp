@@ -54,7 +54,7 @@ int main(int argc, char** argv)
               << "Enter " << CLIENT_CLOSE_CONNECTION_SYMBOL
               << " for close the connection.\n";
 
-    while (true) { // WARNING
+    while (true) {
         std::cout << "Client: ";
         std::cin.getline(buffer, BUFFER_SIZE);
         send(client, buffer, BUFFER_SIZE, 0);
