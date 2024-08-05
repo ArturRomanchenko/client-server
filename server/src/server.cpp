@@ -4,6 +4,29 @@
 namespace network {
 
 
+network::Server::Server(int port): port(port) {
+    client = socket(AF_INET, SOCK_STREAM, 0);
+    if (client < 0) {
+        std::cout << ERROR_S <<"establishing socket error.";
+        exit(0);
+    }
+
+    std::cout << "SERVER: Socket for server was created.\n";
+
+    server_address.sin_port = htons(DEFAULT_PORT);
+    server_address.sin_family = AF_INET;
+    server_address.sin_addr.s_addr = htons(INADDR_ANY);
+
+    init();
+}
+
+
+network::Server::~Server() {
+    close(server);
+    close(client);
+}
+
+
 bool network::Server::disconnect(const char* args)
 {
     for (int idx = 0; idx < strlen(args); ++idx) {
@@ -52,29 +75,6 @@ void network::Server::recive(int server) {
         close(server);
         return;
     }
-}
-
-
-network::Server::Server(int port): port(port) {
-    client = socket(AF_INET, SOCK_STREAM, 0);
-    if (client < 0) {
-        std::cout << ERROR_S <<"establishing socket error.";
-        exit(0);
-    }
-
-    std::cout << "SERVER: Socket for server was created.\n";
-
-    server_address.sin_port = htons(DEFAULT_PORT);
-    server_address.sin_family = AF_INET;
-    server_address.sin_addr.s_addr = htons(INADDR_ANY);
-
-    init();
-}
-
-
-network::Server::~Server() {
-    close(server);
-    close(client);
 }
 
 
