@@ -1,6 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -11,7 +13,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <thread>
-//#include <mutex>
+// #include <mutex>
 
 #define DEFAULT_PORT 1402
 #define BUFFER_SIZE 1024
@@ -19,25 +21,32 @@
 #define ERROR_S "SERVER ERROR: "
 #define CLIENT_CLOSE_CONNECTION_SYMBOL '#'
 
+
 namespace network {
 
+
 class Server {
-  public:
+public:
     Server(int port = DEFAULT_PORT);
     ~Server();
     void start();
-  private:
-    bool is_client_connection_close(const char* args);
-    void handle_client(int server);
-    void setup_server();
-  private:
+
+private:
+    bool disconnect(const char* args);
+    void recive(int server);
+    void init();
+
+private:
     int server;
     int client;
     int port;
-    //std::mutex _mutex;
+    // std::mutex _mutex;
     struct sockaddr_in server_address;
-}; // Server
+
+}; // class Server
+
 
 }; // namespace network
+
 
 #endif // SERVER_H

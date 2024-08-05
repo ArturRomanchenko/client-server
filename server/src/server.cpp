@@ -1,8 +1,10 @@
 #include "server.h"
 
+
 namespace network {
 
-bool network::Server::is_client_connection_close(const char* args)
+
+bool network::Server::disconnect(const char* args)
 {
     for (int idx = 0; idx < strlen(args); ++idx) {
         if (args[idx] == CLIENT_CLOSE_CONNECTION_SYMBOL) {
@@ -12,7 +14,8 @@ bool network::Server::is_client_connection_close(const char* args)
     return false;
 }
 
-void network::Server::handle_client(int server) {
+
+void network::Server::recive(int server) {
     char buffer[BUFFER_SIZE];
     bool IS_EXIT = false;
     while (server > 0) {
@@ -24,7 +27,7 @@ void network::Server::handle_client(int server) {
         std::cout << "Client: ";
         recv(server, buffer, BUFFER_SIZE, 0);
         std::cout << buffer << std::endl;
-        if (is_client_connection_close(buffer)) {
+        if (disconnect(buffer)) {
             IS_EXIT = true;
         }
 
@@ -32,14 +35,14 @@ void network::Server::handle_client(int server) {
             std::cout << "Server: ";
             std::cin.getline(buffer, BUFFER_SIZE);
             send(server, buffer, BUFFER_SIZE, 0);
-            if (is_client_connection_close(buffer)) {
+            if (disconnect(buffer)) {
                 break;
             }
             
             std::cout << "Client: ";
             recv(server, buffer, BUFFER_SIZE, 0);
             std::cout << buffer << std::endl;
-            if ( is_client_connection_close(buffer)) {
+            if ( disconnect(buffer)) {
                 break;
             }
         }
@@ -50,6 +53,7 @@ void network::Server::handle_client(int server) {
         return;
     }
 }
+
 
 network::Server::Server(int port): port(port) {
     client = socket(AF_INET, SOCK_STREAM, 0);
@@ -64,15 +68,17 @@ network::Server::Server(int port): port(port) {
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htons(INADDR_ANY);
 
-    setup_server();
+    init();
 }
+
 
 network::Server::~Server() {
     close(server);
     close(client);
 }
 
-void network::Server::setup_server() {
+
+void network::Server::init() {
     if (bind(client, reinterpret_cast<struct sockaddr*>(&server_address),
         sizeof(server_address)) < 0) {
         std::cout << ERROR_S << "binding connection. Socket has already been establishing.\n";
@@ -83,18 +89,20 @@ void network::Server::setup_server() {
     listen(client, MAX_CLIENTS);
 }
 
+
 void network::Server::start() {
     //std::lock_guard lock(_mutex);
-    while (true) {
+    for (;;) {
         socklen_t size = sizeof(server_address);
         server = accept(client, reinterpret_cast<struct sockaddr*>(&server_address), &size);
         if (server < 0) {
             std::cout << ERROR_S << "Can't accepting client.\n";
         } else {
-            std::thread client_thread(&Server::handle_client, this, server);
+            std::thread client_thread(&Server::recive, this, server);
             client_thread.detach();
         }
     }
 }
+
 
 }; // namespace network
