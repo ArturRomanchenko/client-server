@@ -13,6 +13,8 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
+#include <stdexcept>
+
 #define DEFAULT_PORT 1402
 #define BUFFER_SIZE 1024
 #define SERVER_IP "127.0.0.1"

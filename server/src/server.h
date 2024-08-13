@@ -15,6 +15,8 @@
 #include <thread>
 // #include <mutex>
 
+#include <stdexcept>
+
 #define DEFAULT_PORT 1402
 #define BUFFER_SIZE 1024
 #define MAX_CLIENTS 3

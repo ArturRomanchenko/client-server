@@ -5,17 +5,21 @@ namespace network {
 
 
 network::Server::Server(int port): port(port) {
-    client = socket(AF_INET, SOCK_STREAM, 0);
-    if (client < 0) {
-        std::cout << ERROR_S <<"establishing socket error.";
-        exit(0);
+    try {
+        client = socket(AF_INET, SOCK_STREAM, 0);
+        if (client < 0) {
+            std::cerr << ERROR_S <<"establishing socket error.";
+            exit(0);
+        }
+
+        std::cout << "SERVER: Socket for server was created.\n";
+
+        server_address.sin_port = htons(DEFAULT_PORT);
+        server_address.sin_family = AF_INET;
+        server_address.sin_addr.s_addr = htons(INADDR_ANY);
+    } catch (const std::runtime_error &e) {
+        std::cerr << "Establishing socket error. " << e.what() << '\n';
     }
-
-    std::cout << "SERVER: Socket for server was created.\n";
-
-    server_address.sin_port = htons(DEFAULT_PORT);
-    server_address.sin_family = AF_INET;
-    server_address.sin_addr.s_addr = htons(INADDR_ANY);
 
     init();
 }
@@ -51,6 +55,7 @@ void network::Server::recive(int server) {
         recv(server, buffer, BUFFER_SIZE, 0);
         std::cout << buffer << std::endl;
         if (disconnect(buffer)) {
+            throw std::runtime_error(std::string("Error: Disconnection command received. Buffer content: ") + buffer);
             IS_EXIT = true;
         }
 
@@ -59,14 +64,14 @@ void network::Server::recive(int server) {
             std::cin.getline(buffer, BUFFER_SIZE);
             send(server, buffer, BUFFER_SIZE, 0);
             if (disconnect(buffer)) {
-                break;
+                throw std::runtime_error(std::string("Error: Disconnection command received. Buffer content: ") + buffer);  
             }
             
             std::cout << "Client: ";
             recv(server, buffer, BUFFER_SIZE, 0);
             std::cout << buffer << std::endl;
             if ( disconnect(buffer)) {
-                break;
+                throw std::runtime_error(std::string("Error: Disconnection command received. Buffer content: ") + buffer);
             }
         }
         
@@ -81,7 +86,7 @@ void network::Server::recive(int server) {
 void network::Server::init() {
     if (bind(client, reinterpret_cast<struct sockaddr*>(&server_address),
         sizeof(server_address)) < 0) {
-        std::cout << ERROR_S << "binding connection. Socket has already been establishing.\n";
+        std::cerr << ERROR_S << "binding connection. Socket has already been establishing.\n";
         return;
     }
 
@@ -92,15 +97,21 @@ void network::Server::init() {
 
 void network::Server::start() {
     //std::lock_guard lock(_mutex);
-    for (;;) {
-        socklen_t size = sizeof(server_address);
-        server = accept(client, reinterpret_cast<struct sockaddr*>(&server_address), &size);
-        if (server < 0) {
-            std::cout << ERROR_S << "Can't accepting client.\n";
-        } else {
-            std::thread client_thread(&Server::recive, this, server);
-            client_thread.detach();
+    try {
+        for (;;) {
+            socklen_t size = sizeof(server_address);
+            server = accept(client, reinterpret_cast<struct sockaddr*>(&server_address), &size);
+            if (server < 0) {
+                std::cerr << ERROR_S << "Can't accepting client.\n";
+            } else {
+                std::thread client_thread(&Server::recive, this, server);
+                client_thread.detach();
+            }
         }
+    } catch (const std::runtime_error &e) {
+        std::cerr << "Runtime Error: " << e.what() << '\n';
+    } catch (...) {
+        std::cerr << "Unknown runtime error occurred.\n";
     }
 }
 
